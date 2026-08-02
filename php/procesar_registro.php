@@ -18,7 +18,7 @@ try {
    <!DOCTYPE html>
     <html lang="es">
     <head>
-    <metacharset="UFT-8">
+    <metacharset="UTF-8">
     <title>REGISTRO EXITOSO</title>
 
     <style>
@@ -30,15 +30,15 @@ try {
     margin: 0;
     font-family: Arial, sans-serif;
 }
-    contenedor {
+    .contenedor {
     width:420px;
     margin:80px auto;
-    background:rgba(255,255,255,o,15);
-    background-filter:blur(6px);
+    background:rgba(0,0,0,0.15);
+    backdrop-filter:blur(6px);
     padding:30px;
     border-radius:12px;
     text-align:center;
-    box-shadow. 0 0 15px rgba(0,0,.2);
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
     }
     h1{
     color:white;
