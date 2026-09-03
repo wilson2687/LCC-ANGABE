@@ -22,8 +22,8 @@
         
         
         <ul class="header-menu ">
-            <li class="open_submenu"> <a class="link-header" href="./index.html"> Inicio</a></li>
-            <li> <a class="link-header" href="./portafolio.html"> Clases</a></li>
+            <li class="open_submenu"> <a class="link-header" href="./index.php"> Inicio</a></li>
+            <li> <a class="link-header" href="./portafolio.php"> Clases</a></li>
             <li> <a class="link-header" href=""> Intercambio</a></li>
             <li> <a class="link-header" class="open-modal-btns" onclick="openModal()"> Cotizacion</a></li>
             <button class="open-modal-btn">Iniciar Sesión</button>
@@ -56,7 +56,7 @@
 
           <button class="login-btn">INICIAR SESION</button>
 
-          <div class="div-register"><a class="register" href="./formulario.html">Registrarse</a></div>
+          <div class="div-register"><a class="register" href="./formulario.php">Registrarse</a></div>
       </div>
   </div> 
   <div class="form-container">
