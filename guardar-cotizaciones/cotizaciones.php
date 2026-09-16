@@ -1,52 +1,59 @@
 <?php
-include __DIR__. '/../config/conexion.php';
 session_start();
+error_reporting(E_ALL);
+ini_set('display_errors',1);
 
-// Tu conexion se llama $conn, $con o $conexion, esto lo detecta solo
-if (isset($conexion)) { $db = $conexion; }
-elseif (isset($conn)) { $db = $conn; }
-elseif (isset($con)) { $db = $con; }
-elseif (isset($mysqli)) { $db = $mysqli; }
-else { die("No encontre la variable de conexion en config/conexion.php"); }
+// busca la conexion donde la tengas
+if(file_exists("../config/conexion.php")) require_once("../config/conexion.php");
+elseif(file_exists("../../config/conexion.php")) require_once("../../config/conexion.php");
+elseif(file_exists("config/conexion.php")) require_once("config/conexion.php");
+else{ die("No encuentro conexion.php"); }
 
-$observaciones = $_POST['observaciones']?? '';
-$detalles = $_POST['detalles']?? '';
-$usuario_id = $_SESSION['id']?? 1;
+$uid = intval($_SESSION['id'] ?? $_SESSION['usuario_id'] ?? 0);
+$obs = $conn->real_escape_string($_POST['observaciones'] ?? $_POST['obs'] ?? 'Sin observaciones');
+$det = $conn->real_escape_string($_POST['detalles'] ?? '');
 
-$directorio = __DIR__. '/../uploads/cotizaciones/';
-$directorio_bd = "uploads/cotizaciones/";
-if (!file_exists($directorio)) {
-    mkdir($directorio, 0777, true);
-}
+// 1. Inserta primero para obtener el ID - CON archivos vacío
+$conn->query("INSERT INTO cotizaciones (usuario_id, observaciones, detalles, estado, fecha, archivos) VALUES ($uid, '$obs', '$det', 'pendiente', NOW(), '[]')");
+$id = $conn->insert_id;
 
-$archivos_guardados = [];
+$carpeta = "../uploads/cotizacion_$id/";
+$carpeta_bd = "uploads/cotizacion_$id/";
+if(!is_dir($carpeta)) mkdir($carpeta, 0777, true);
 
-function guardarArch($inputName, $dirFisico, $dirBD, &$lista){
-    if(isset($_FILES[$inputName]) &&!empty($_FILES[$inputName]['name'][0])){
-        for($i=0; $i<count($_FILES[$inputName]['name']); $i++){
-            if($_FILES[$inputName]['error'][$i]==0){
-                $nombre = time()."_".rand(1000,9999)."_".basename($_FILES[$inputName]['name'][$i]);
-                if(move_uploaded_file($_FILES[$inputName]['tmp_name'][$i], $dirFisico.$nombre)){
-                    $lista[] = $dirBD.$nombre;
-                }
-            }
+$rutas = [];
+
+// 2. Guarda archivos (tu mismo codigo pero guardando la ruta)
+foreach(['documentos','documentos2'] as $campo){
+  if(isset($_FILES[$campo])){
+    foreach($_FILES[$campo]['tmp_name'] as $k => $tmp){
+      if($tmp && $_FILES[$campo]['error'][$k]==0){
+        $name = time()."_".basename($_FILES[$campo]['name'][$k]);
+        $name = preg_replace('/[^a-zA-Z0-9._-]/','_', $name);
+        if(move_uploaded_file($tmp, $carpeta.$name)){
+          $rutas[] = $carpeta_bd.$name;
         }
+      }
     }
+  }
 }
 
-guardarArch('documentos', $directorio, $directorio_bd, $archivos_guardados);
-guardarArch('documentos2', $directorio, $directorio_bd, $archivos_guardados);
-
-$archivos_json = $db->real_escape_string(json_encode($archivos_guardados));
-$obs = $db->real_escape_string($observaciones);
-$det = $db->real_escape_string($detalles);
-
-$sql = "INSERT INTO cotizaciones (usuario_id, observaciones, detalles, archivos, fecha) VALUES ('$usuario_id', '$obs', '$det', '$archivos_json', NOW())";
-
-if ($db->query($sql)) {
-    header("Location: /LCC-ANGABE/dashboard.php?ok=1");
-    exit();
-} else {
-    echo "Error BD: ". $db->error;
+// Si tu form tiene name="archivo" en singular
+if(isset($_FILES['archivo']) && $_FILES['archivo']['error']==0){
+  $name = time()."_".basename($_FILES['archivo']['name']);
+  $name = preg_replace('/[^a-zA-Z0-9._-]/','_', $name);
+  if(move_uploaded_file($_FILES['archivo']['tmp_name'], $carpeta.$name)){
+    $rutas[] = $carpeta_bd.$name;
+  }
 }
+
+// 3. ESTA ES LA LINEA QUE TE FALTA - ACTUALIZA LA BD CON EL ARCHIVO
+if(!empty($rutas)){
+  $json = json_encode($rutas, JSON_UNESCAPED_SLASHES);
+  $json = $conn->real_escape_string($json);
+  $conn->query("UPDATE cotizaciones SET archivos='$json' WHERE id=$id");
+}
+
+header("Location: ../dashboard.php?ok=1");
+exit();
 ?>

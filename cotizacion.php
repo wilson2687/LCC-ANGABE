@@ -1,44 +1,69 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    <!-- Modal -->
-  <div class="modal" id="modalFormulario">
-    <div class="modal-content">
-      <span class="close-btn" onclick="closeModal()">&times;</span>
+<?php
+session_start();
+require_once('../config/conexion.php');
 
-      <h2>TRADUCCIONES</h2>
-      <p><strong>&gt;Por página</strong></p>
+if(!isset($_SESSION['usuario'])){
+    header("Location: ../index.php");
+    exit();
+}
 
-      <label for="observaciones">Observaciones:</label>
-      <textarea id="observaciones" placeholder="Escribe tus observaciones aquí..."></textarea>
+$usuario_id = intval($_SESSION['id'] ?? $_SESSION['usuario_id'] ?? 0);
+$observaciones = $conn->real_escape_string($_POST['observaciones'] ?? '');
+$detalles = $conn->real_escape_string($_POST['detalles'] ?? '');
+$estado = 'pendiente';
 
-      <label>Adjuntar documentos:</label>
-      <div class="file-section">
-        <label>
-          <input type="file" id="file1" hidden>
-          <img src="https://img.icons8.com/ios-filled/50/000000/document.png" alt="Documento" onclick="document.getElementById('file1').click();">
-        </label>
-        <label>
-          <input type="file" id="file2" hidden>
-          <img src="https://img.icons8.com/ios-filled/50/000000/folder-invoices--v1.png" alt="Carpeta" onclick="document.getElementById('file2').click();">
-        </label>
-      </div>
+// 1. INSERTA PRIMERO VACÍO PARA CONSEGUIR EL ID
+$sql = "INSERT INTO cotizaciones (usuario_id, observaciones, detalles, estado, fecha, archivos) VALUES ($usuario_id, '$observaciones', '$detalles', '$estado', NOW(), '[]')";
 
-      <textarea placeholder="Detalles adicionales..."></textarea>
+if($conn->query($sql)){
+    $cotizacion_id = $conn->insert_id;
 
-      <div class="checkbox-section">
-        <input type="checkbox" id="terminos">
-        <label for="terminos">Acepto Términos y condiciones</label>
-      </div>
+    // CREA CARPETA PARA ESTA COTIZACION
+    $carpeta = "../uploads/cotizacion_$cotizacion_id/";
+    $carpeta_bd = "uploads/cotizacion_$cotizacion_id/"; // ruta para la BD sin ../
+    if(!is_dir($carpeta)){
+        mkdir($carpeta, 0777, true);
+    }
 
-      <button class="submit-btn" onclick="enviarFormulario()">Enviar Solicitud De Cotización</button>
-    </div>
-  </div>
+    $rutas_guardadas = [];
 
-</body>
-</html>
+    // Guarda primer grupo de archivos
+    if(isset($_FILES['documentos'])){
+        foreach($_FILES['documentos']['tmp_name'] as $k=>$tmp){
+            if(!empty($tmp) && $_FILES['documentos']['error'][$k]==0){
+                $nombre = basename($_FILES['documentos']['name'][$k]);
+                $nombre = preg_replace('/[^a-zA-Z0-9._-]/','_', $nombre);
+                $nombre_final = time()."_".$nombre;
+                if(move_uploaded_file($tmp, $carpeta.$nombre_final)){
+                    $rutas_guardadas[] = $carpeta_bd.$nombre_final;
+                }
+            }
+        }
+    }
+    // Guarda segundo grupo de archivos
+    if(isset($_FILES['documentos2'])){
+        foreach($_FILES['documentos2']['tmp_name'] as $k=>$tmp){
+            if(!empty($tmp) && $_FILES['documentos2']['error'][$k]==0){
+                $nombre = basename($_FILES['documentos2']['name'][$k]);
+                $nombre = preg_replace('/[^a-zA-Z0-9._-]/','_', $nombre);
+                $nombre_final = time()."_".$nombre;
+                if(move_uploaded_file($tmp, $carpeta.$nombre_final)){
+                    $rutas_guardadas[] = $carpeta_bd.$nombre_final;
+                }
+            }
+        }
+    }
+
+    // 2. AHORA SI ACTUALIZA LA COLUMNA ARCHIVOS CON LAS RUTAS REALES
+    if(!empty($rutas_guardadas)){
+        $json = json_encode($rutas_guardadas, JSON_UNESCAPED_SLASHES);
+        $json_sql = $conn->real_escape_string($json);
+        $conn->query("UPDATE cotizaciones SET archivos='$json_sql' WHERE id=$cotizacion_id");
+    }
+
+    header("Location: ../dashboard.php?ok=1");
+    exit();
+} else {
+    echo "Error al guardar: ".$conn->error;
+}
+?>
