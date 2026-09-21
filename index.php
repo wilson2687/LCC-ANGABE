@@ -1,4 +1,6 @@
-<?php session_start(); ?>
+<?php session_start(); 
+$isLogged = isset($_SESSION['id_usuario']) || isset($_SESSION['usuario']);
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -23,14 +25,12 @@
                  <p class="salto">Lcc Traducciones</p>
             </div>
             <ul class="header-menu">
-                <li><a class="link-header barra" href="./index.php"> Inicio</a></li>
-                <li><a class="link-header" href="./portafolio.php"> Clases</a></li>
-                <li><a class="link-header" href=""> Intercambio</a></li>
-                <li><a class="link-header" href="#" onclick="openCotizacion(); return false;"> Cotizacion</a></li>
-           </ul>
-
-                    <button class="open-modal-btn" onclick="openLogin()" type="button">Iniciar Sesión</button>
-        
+              <li><a class="link-header barra" href="./index.php"> Inicio</a></li>
+              <li><a class="link-header" href="#" onclick="servicioNoDisponible(); return false;"> Clases</a></li>
+              <li><a class="link-header" href="#" onclick="servicioNoDisponible(); return false;"> Intercambio</a></li>
+              <li><a class="link-header" href="#" onclick="openCotizacion(); return false;"> Cotizacion</a></li>
+            </ul>
+            <button class="open-modal-btn" onclick="openLogin()" type="button">Iniciar Sesión</button>
         </nav>
     </div>
 </header>
@@ -128,14 +128,29 @@
 </footer>
 
 <script>
+// Variable que viene de PHP para saber si esta logueado
+var usuarioLogueado = <?php echo $isLogged ? 'true' : 'false'; ?>;
+
 function openLogin(){
   document.getElementById('modalOverlay').style.display='flex';
   document.getElementById('modalFormulario').style.display='none';
 }
+
 function openCotizacion(){
-  document.getElementById('modalOverlay').style.display='none';
-  document.getElementById('modalFormulario').style.display='flex';
+  if(usuarioLogueado){
+    // Si esta logueado, si deja cotizar
+    document.getElementById('modalOverlay').style.display='none';
+    document.getElementById('modalFormulario').style.display='flex';
+  } else {
+    // Si NO esta logueado, lo mandamos a registrarse
+    window.location.href = "./formulario.php";
+  }
 }
+
+function servicioNoDisponible(){
+  alert("Este servicio no esta disponible por el momento. Estara disponible en una proxima actualizacion.");
+}
+
 function closeAll(){
   document.getElementById('modalOverlay').style.display='none';
   document.getElementById('modalFormulario').style.display='none';

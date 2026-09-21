@@ -120,7 +120,7 @@ function mostrarArchivos(i,id){ let l=document.getElementById(id); l.innerHTML="
 </script>
 
 <a href="gestion_clases.php" style="display:block;background:#1e8c5a;color:white;padding:12px;margin:10px;border-radius:5px;text-decoration:none;">Gestión de Clases</a>
-<a href="gestion_intercambio.php" style="display:block;background:#1e8c5a;color:white;padding:12px;margin:10px;border-radius:5px;text-decoration:none;">Gestión de Intercambio</a>
+<a href="gestion_intercambios.php" style="display:block;background:#1e8c5a;color:white;padding:12px;margin:10px;border-radius:5px;text-decoration:none;">Gestión de Intercambios</a>
 <a href="gestion_reportes.php" style="display:block;background:#1e8c5a;color:white;padding:12px;margin:10px;border-radius:5px;text-decoration:none;">Gestión de Reportes</a>
 <a href="logout.php" style="display:block;background:#1e8c5a;color:white;padding:12px;margin:10px;border-radius:5px;text-decoration:none;">Cerrar sesión</a>
 

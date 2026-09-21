@@ -96,12 +96,12 @@
       <div class="fecha">
         <input type="text" placeholder="DIA" required>
         <input type="text" placeholder="MES" required>
-        <select required>
-          <option value="">SELECCIÓN</option>
-          <option value="2000">2000</option>
-          <option value="2001">2001</option>
-          <!-- Agrega más años -->
-        </select>
+        <select>
+  <option>SELECCIÓN</option>
+  <?php for($y = 2026; $y >= 1940; $y--){ ?>
+    <option value="<?php echo $y; ?>"><?php echo $y; ?></option>
+  <?php } ?>
+</select>
       </div>
 
       <label>Sexo *</label>

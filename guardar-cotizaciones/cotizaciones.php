@@ -9,7 +9,8 @@ elseif(file_exists("../../config/conexion.php")) require_once("../../config/cone
 elseif(file_exists("config/conexion.php")) require_once("config/conexion.php");
 else{ die("No encuentro conexion.php"); }
 
-$uid = intval($_SESSION['id'] ?? $_SESSION['usuario_id'] ?? 0);
+if(session_status()===PHP_SESSION_NONE){ session_start(); }
+$uid = intval($_SESSION['id'] ?? $_SESSION['usuario_id'] ?? $_SESSION['user_id'] ?? $_SESSION['id_usuario'] ?? 0);
 $obs = $conn->real_escape_string($_POST['observaciones'] ?? $_POST['obs'] ?? 'Sin observaciones');
 $det = $conn->real_escape_string($_POST['detalles'] ?? '');
 
